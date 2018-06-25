@@ -1,0 +1,8 @@
+package org.maksymov.demo.db.repository;
+
+import org.maksymov.demo.db.entity.UserProfileEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserProfileRepository extends JpaRepository<UserProfileEntity, Long> {
+
+}

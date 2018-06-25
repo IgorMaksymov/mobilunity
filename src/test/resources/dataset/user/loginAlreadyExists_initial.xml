@@ -1,0 +1,9 @@
+<dataset>
+
+    <!-- ACCOUNT -->
+    <ACCOUNT ID="1" LOGIN="TestLogin" PASSWORD="TestPassword" />
+
+    <!-- PROFILE -->
+    <PROFILE ID="1" FIRST_NAME="Test First Name" LAST_NAME="Test Last Name" />
+
+</dataset>

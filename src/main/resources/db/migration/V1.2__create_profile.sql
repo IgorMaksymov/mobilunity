@@ -1,0 +1,5 @@
+CREATE TABLE PROFILE (ID BIGINT CONSTRAINT PROFILE_PK PRIMARY KEY,
+                      FIRST_NAME VARCHAR(255),
+                      LAST_NAME VARCHAR(255),
+                      FOREIGN KEY (ID) references ACCOUNT(ID) ON UPDATE CASCADE ON DELETE CASCADE
+                      )
