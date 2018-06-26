@@ -1,25 +1,33 @@
 package org.maksymov.demo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.springtestdbunit.DbUnitTestExecutionListener;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import io.restassured.http.ContentType;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.maksymov.demo.DemoApplication;
 import org.maksymov.demo.controller.payload.UserWithCredentials;
 import org.maksymov.demo.dto.ErrorDTO;
 import org.maksymov.demo.dto.UserProfileWithLoginDTO;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertSame;
 import static org.maksymov.demo.ExceptionCode.USER_ALREADY_EXISTS;
 
-public class UserControllerIT extends AbstractIT {
+@RunWith(SpringRunner.class)
+@TestExecutionListeners(DbUnitTestExecutionListener.class)
+@SpringBootTest(classes = DemoApplication.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+public class UserControllerIT {
 
+    private static final String URL = "http://localhost:8080";
     private static final String USER_API =  URL + "/api/user";
     private static final String DEFAULT_LOGIN = "TestLogin";
     private static final String DEFAULT_PASSWORD = "TestPassword";
@@ -30,14 +38,26 @@ public class UserControllerIT extends AbstractIT {
 
     @Test
     @ExpectedDatabase(value = "classpath:dataset/user/createNewUser_expected.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
-    public void shouldCreateNewUser() {
+    public void shouldCreateNewUser() throws Exception {
         final UserWithCredentials userProfileWithCredentials = prepareDefaultUser().build();
         final UserProfileWithLoginDTO expectedValue = new UserProfileWithLoginDTO(null, DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME, DEFAULT_LOGIN);
-        ResponseEntity<UserProfileWithLoginDTO> response = REST_TEMPLATE.postForEntity(USER_API, userProfileWithCredentials, UserProfileWithLoginDTO.class);
-        response.getBody().setId(null);
 
-        assertThat(response.getBody(), is(expectedValue));
-        assertSame(response.getStatusCode(), HttpStatus.OK);
+        final String responseJson =
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(userProfileWithCredentials)
+        .when()
+                .post(USER_API)
+        .then()
+                .statusCode(HttpStatus.OK.value())
+        .extract()
+                .response().asString();
+
+        final UserProfileWithLoginDTO actualValue = objectMapper.readValue(responseJson, UserProfileWithLoginDTO.class);
+        actualValue.setId(null);
+
+        assertThat(actualValue, is(expectedValue));
     }
 
     @Test
